@@ -46,12 +46,13 @@
 7zip:x64-uwp=fail
 abseil:arm-uwp=fail
 # ace is failing because the port's attempt to make yasm available is not succeeding
-ace:x86-windows=fail
-ace:x64-windows=fail
-ace:arm64-windows=fail
 ace:arm-uwp=fail
+ace:arm64-windows=fail
 ace:x64-osx=fail
 ace:x64-uwp=fail
+ace:x64-windows=fail
+ace:x86-windows-static=fail
+ace:x86-windows=fail
 activemq-cpp:x64-windows-static=fail
 akali:x64-uwp=fail
 akali:arm-uwp=fail
@@ -309,9 +310,10 @@ cudnn:x64-windows-static=fail
 cudnn:x86-windows=fail
 date:arm64-windows=fail
 dbow2:x64-osx=fail
-dcmtk:arm64-windows=fail
 dcmtk:arm-uwp=fail
+dcmtk:arm64-windows=fail
 dcmtk:x64-uwp=fail
+dcmtk:x64-windows-static=fail
 detours:x64-linux=fail
 detours:x64-osx=fail
 devicenameresolver:arm-uwp=fail
@@ -461,11 +463,6 @@ fmilib:x64-uwp=fail
 fmilib:x64-windows=ignore
 fmilib:x64-windows-static=ignore
 fmilib:x86-windows=ignore
-# Folly fails due to a compiler bug in MSVC 19.22.27905, fixed in newer releases
-folly:arm64-windows=fail
-folly:x86-windows=fail
-folly:x64-windows=fail
-folly:x64-windows-static=fail
 foonathan-memory:arm64-windows=fail
 foonathan-memory:arm-uwp=fail
 foonathan-memory:x64-uwp=fail
@@ -606,6 +603,7 @@ hwloc:x64-linux=fail
 hwloc:x64-osx=fail
 hwloc:x64-uwp=fail
 hyperscan:x64-linux=ignore
+# hypre has a conflict with 'superlu' port
 hypre:x64-linux=fail
 hypre:x64-osx=fail
 icu:arm64-windows=fail
@@ -878,6 +876,13 @@ libpng-apng:x64-uwp            = skip
 libpng-apng:x64-windows        = skip
 libpng-apng:x64-windows-static = skip
 libpng-apng:x86-windows        = skip
+# The server hosting the libpopt sources appears to be offline
+libpopt:arm-uwp=fail
+libpopt:arm64-windows=fail
+libpopt:x64-uwp=fail
+libpopt:x64-windows-static=fail
+libpopt:x64-windows=fail
+libpopt:x86-windows=fail
 libpq:arm-uwp=fail
 libpq:x64-uwp=fail
 librabbitmq:x64-linux=ignore
@@ -958,6 +963,9 @@ libvpx:arm-uwp=fail
 libvpx:arm64-windows=fail
 libvpx:x64-linux=fail
 libvpx:x64-osx=fail
+libvpx:x64-uwp=fail
+libvpx:x64-windows-static=fail
+libvpx:x64-windows=fail
 libvpx:x86-windows=fail
 libwandio:x86-windows=fail
 libwandio:x64-windows=fail
@@ -1121,8 +1129,9 @@ mozjpeg:x86-windows        = skip
 # mpg123 is failing because the port's attempt to make yasm available is not succeeding
 mpg123:arm-uwp=fail
 mpg123:x64-uwp=fail
-mpg123:x86-windows=fail
+mpg123:x64-windows-static=fail
 mpg123:x64-windows=fail
+mpg123:x86-windows=fail
 mpir:arm64-windows=fail
 mpir:arm-uwp=fail
 mpir:x64-uwp=fail
@@ -1438,6 +1447,7 @@ protobuf-c:arm64-windows=fail
 protobuf-c:arm-uwp=fail
 # proxygen fails with "Target 'Windows' not supported by proxygen!"
 proxygen:x64-windows=fail
+proxygen:x64-windows-static=fail
 ptex:arm-uwp=fail
 ptex:x64-linux=fail
 ptex:x64-osx=fail
@@ -1679,9 +1689,26 @@ stormlib:arm-uwp=fail
 stormlib:x64-uwp=fail
 stxxl:arm-uwp=fail
 stxxl:x64-uwp=fail
-superlu:arm64-windows=fail
-superlu:arm-uwp=fail
-superlu:x64-uwp=fail
+# Conflicts between ports:
+#The following files are already installed in C:/agent/_work/1/s/installed/x64-windows-static
+# and are in conflict with superlu:x64-windows-static
+#
+#Installed by hypre:x64-windows-static
+#    include/slu_Cnames.h
+#    include/slu_cdefs.h
+#    include/slu_dcomplex.h
+#    include/slu_ddefs.h
+#    include/slu_scomplex.h
+#    include/slu_sdefs.h
+#    include/slu_util.h
+#    include/slu_zdefs.h
+#    include/supermatrix.h
+superlu:arm-uwp=skip
+superlu:arm-windows=skip
+superlu:arm64-windows=skip
+superlu:x64-uwp=skip
+superlu:x64-windows-static=skip
+superlu:x64-windows=skip
 systemc:arm64-windows=fail
 systemc:arm-uwp=fail
 systemc:x64-uwp=fail
