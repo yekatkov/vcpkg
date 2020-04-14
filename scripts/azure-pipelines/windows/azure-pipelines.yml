@@ -11,6 +11,8 @@ jobs:
     triplet: '${{ parameters.triplet }}'
     forceAllPortsToRebuildKey: ''
 
+  timeoutInMinutes: 1440 # 1 day
+
   steps:
   - powershell: |
       $StorageAccountName= $env:StorageAccountName

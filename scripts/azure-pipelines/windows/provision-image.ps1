@@ -69,7 +69,9 @@ $Workloads = @(
   'Microsoft.VisualStudio.Component.VC.ATL',
   'Microsoft.VisualStudio.Component.VC.ATLMFC',
   'Microsoft.VisualStudio.Component.VC.v141.x86.x64.Spectre',
-  'Microsoft.VisualStudio.Component.Windows10SDK.18362'
+  'Microsoft.VisualStudio.Component.Windows10SDK.18362',
+  'Microsoft.Net.Component.4.8.SDK',
+  'Microsoft.Component.NetFX.Native'
 )
 
 $VisualStudioBootstrapperUrl = 'https://aka.ms/vs/16/release/vs_community.exe'
