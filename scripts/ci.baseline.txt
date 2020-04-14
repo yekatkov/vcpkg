@@ -47,6 +47,7 @@
 abseil:arm-uwp=fail
 # ace is failing because the port's attempt to make yasm available is not succeeding
 ace:x86-windows=fail
+ace:x64-windows=fail
 ace:arm64-windows=fail
 ace:arm-uwp=fail
 ace:x64-osx=fail
@@ -443,8 +444,6 @@ ffmpeg:arm64-windows=fail
 field3d:x64-windows=fail
 field3d:x64-windows-static=fail
 field3d:x86-windows=fail
-fizz:x64-windows=fail
-fizz:x64-windows-static=fail
 flint:x64-linux=fail
 flint:x64-osx=fail
 fltk:arm-uwp=fail
@@ -994,9 +993,6 @@ llvm:arm64-windows=fail
 llvm:arm-uwp=fail
 llvm:x64-uwp=fail
 llvm:x64-linux=ignore
-# disable them temporarily and wait for fix
-llvm:x64-windows=fail
-llvm:x64-windows-static=fail
 # installing iconv makes building llvm fail; needs to be fixed
 llvm:x64-osx=ignore
 lmdb:arm64-windows=fail
@@ -1122,10 +1118,11 @@ mozjpeg:x64-uwp            = skip
 mozjpeg:x64-windows        = skip
 mozjpeg:x64-windows-static = skip
 mozjpeg:x86-windows        = skip
-# ace is failing because the port's attempt to make yasm available is not succeeding
+# mpg123 is failing because the port's attempt to make yasm available is not succeeding
 mpg123:arm-uwp=fail
 mpg123:x64-uwp=fail
 mpg123:x86-windows=fail
+mpg123:x64-windows=fail
 mpir:arm64-windows=fail
 mpir:arm-uwp=fail
 mpir:x64-uwp=fail
@@ -1439,6 +1436,8 @@ protobuf-c:x64-windows-static=fail
 protobuf-c:x64-uwp=fail
 protobuf-c:arm64-windows=fail
 protobuf-c:arm-uwp=fail
+# proxygen fails with "Target 'Windows' not supported by proxygen!"
+proxygen:x64-windows=fail
 ptex:arm-uwp=fail
 ptex:x64-linux=fail
 ptex:x64-osx=fail
