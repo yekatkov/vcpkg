@@ -15,7 +15,7 @@ jobs:
 
   steps:
   - powershell: |
-      $StorageAccountName= $env:StorageAccountName
+      $StorageAccountName = $env:StorageAccountName
       $StorageAccountKey = $env:StorageAccountKey
 
       function Remove-DirectorySymlink {

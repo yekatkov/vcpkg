@@ -89,7 +89,7 @@ function build_test_results {
 
     [xml]$xmlContents = Get-Content $xmlFilename
 
-    # This currently only supports one collection per assempbly, which is the way
+    # This currently only supports one collection per assembly, which is the way
     # the vcpkg tests are designed to run in the pipeline.
     $xmlAssembly = $xmlContents.assemblies.assembly
     $assemblyName = $xmlAssembly.name
@@ -105,8 +105,8 @@ function build_test_results {
         $name = ($test.name -replace ":.*$")
 
         # Reconstruct the original BuildResult enumeration (defined in Build.h)
-        #   failure.message - why test failed (valid only on test failure)
-        #   reason - why test skipped (valid only when test is skipped)
+        #   failure.message - why the test failed (valid only on test failure)
+        #   reason - why the test was skipped (valid only when the test is skipped)
         #    case BuildResult::POST_BUILD_CHECKS_FAILED:
         #    case BuildResult::FILE_CONFLICTS:
         #    case BuildResult::BUILD_FAILED:
@@ -128,7 +128,6 @@ function build_test_results {
         $abi_tag = ""
         $features = ""
         foreach ( $trait in $test.traits.trait) {
-            #Write-Verbose "$($trait.name):$($trait.value)"
             switch ( $trait.name ) {
                 "abi_tag" { $abi_tag = $trait.value }
                 "features" { $features = $trait.value }
@@ -230,7 +229,7 @@ function combine_results {
 
     Write-Verbose "analyzing $($currentTests.count) tests"
 
-    foreach ( $key in $currentTests.keys) { # limiting range for testing
+    foreach ($key in $currentTests.keys) {
         Write-Verbose "analyzing $key"
 
         $message = $null
@@ -573,12 +572,12 @@ function write_errors_for_summary {
 
                 if ($test.currentResult -eq "pass") {
                     [System.Console]::Error.WriteLine( `
-                    "$prefix PASSING, REMOVE FROM FAIL LIST: $($test.name):$triplet ($baselineFile)" `
+                            "$prefix PASSING, REMOVE FROM FAIL LIST: $($test.name):$triplet ($baselineFile)" `
                     )
                 }
                 else {
                     [System.Console]::Error.WriteLine( `
-                    "$prefix REGRESSION: $($test.name):$triplet. If expected, add $($test.name):$triplet=fail to $baselineFile." `
+                            "$prefix REGRESSION: $($test.name):$triplet. If expected, add $($test.name):$triplet=fail to $baselineFile." `
                     )
                 }
             }
