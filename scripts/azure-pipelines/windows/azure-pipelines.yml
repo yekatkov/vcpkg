@@ -1,0 +1,159 @@
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
+#
+
+jobs:
+- job: ${{ parameters.jobName }}
+  pool:
+    name: PrWin-2020-04-05-1
+
+  variables:
+    triplet: '${{ parameters.triplet }}'
+    forceAllPortsToRebuildKey: ''
+
+  steps:
+  - powershell: |
+      $StorageAccountName= $env:StorageAccountName
+      $StorageAccountKey = $env:StorageAccountKey
+
+      function Remove-DirectorySymlink {
+          Param([string]$Path)
+          if (Test-Path $Path) {
+              [System.IO.Directory]::Delete($Path)
+          }
+      }
+
+      Write-Output 'Setting up archives mount'
+      if (-Not (Test-Path W:)) {
+          net use W: "\\$StorageAccountName.file.core.windows.net\archives" /u:"AZURE\$StorageAccountName" $StorageAccountKey
+      }
+
+      Write-Output 'Setting up logs mount'
+      if (-Not (Test-Path L:)) {
+          net use L: "\\$StorageAccountName.file.core.windows.net\logs" /u:"AZURE\$StorageAccountName" $StorageAccountKey
+      }
+
+      Write-Output 'Creating downloads directory'
+      mkdir D:\downloads -ErrorAction SilentlyContinue
+
+      # Delete entries in the downloads folder, except:
+      #   those in the 'tools' folder
+      #   those last accessed in the last 30 days
+      Get-ChildItem -Path D:\downloads -Exclude "tools" `
+        | ?{ $_.LastAccessTime -lt (get-Date).AddDays(-30) } `
+        | %{Remove-Item -Path $_ -Recurse -Force}
+
+      # Msys sometimes leaves a database lock file laying around, especially if there was a failed job
+      # which causes unrelated failures in jobs that run later on the machine.
+      # work around this by just removing the vcpkg installed msys2 if it exists
+      if( Test-Path D:\downloads\tools\msys2 )
+      {
+          Write-Output "removing previously installed msys2"
+          rm D:\downloads\tools\msys2 -Recurse -Force
+      }
+
+      Write-Output 'Setting up archives path...'
+      if ("$(forceAllPortsToRebuildKey)" -eq "")
+      {
+          $archivesPath = 'W:\'
+      }
+      else
+      {
+          $archivesPath = "W:\force\$(forceAllPortsToRebuildKey)"
+          if (-Not (Test-Path $fullPath)) {
+              Write-Output 'Creating $archivesPath'
+              mkdir $archivesPath
+          }
+      }
+
+      Write-Output "Linking archives => $archivesPath"
+      Remove-DirectorySymlink archives
+      cmd /c "mklink /D archives $archivesPath"
+
+      Write-Output 'Linking installed => E:\installed'
+      Remove-DirectorySymlink installed
+      Remove-Item E:\installed -Recurse -Force -ErrorAction SilentlyContinue
+      mkdir E:\installed
+      cmd /c "mklink /D installed E:\installed"
+
+      Write-Output 'Linking downloads => D:\downloads'
+      Remove-DirectorySymlink downloads
+      cmd /c "mklink /D downloads D:\downloads"
+
+      Write-Output 'Cleaning buildtrees'
+      Remove-Item buildtrees\* -Recurse -Force -errorAction silentlycontinue
+
+      Write-Output 'Cleaning packages'
+      Remove-Item packages\* -Recurse -Force -errorAction silentlycontinue
+      Remove-Item archives\fail\* -Recurse -Force -errorAction silentlycontinue
+
+      Write-Output 'Done'
+      ls $(System.DefaultWorkingDirectory)
+    displayName: 'Initialize Environment'
+
+  - powershell: |
+      $baselineFile = "$(System.DefaultWorkingDirectory)\scripts\ci.baseline.txt"
+      $skipList = $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\generate-skip-list.ps1 -Triplet $(triplet) -BaselineFile $baselineFile
+      Write-Output "baseline file: $baselineFile"
+      Write-Output "skip list: $skipList"
+      $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\windows\ci-step.ps1 -Triplet "$(triplet)" -ExcludePorts $skipList
+      Write-Output "CI test script is complete"
+    errorActionPreference: continue
+    displayName: '** Build vcpkg and test ports **'
+
+  - powershell: |
+      $baseName = "$(triplet)"
+      $outputPathRoot = "$(System.ArtifactsDirectory)\raw xml results"
+      if(-not (Test-Path $outputPathRoot))
+      {
+          Write-Output "creating $outputPathRoot"
+          mkdir $outputPathRoot | Out-Null
+      }
+
+      $xmlPath = "$(System.DefaultWorkingDirectory)\test-full-ci.xml"
+      $outputXmlPath = "$outputPathRoot\$baseName.xml"
+
+      cp $xmlPath $(Build.ArtifactStagingDirectory)
+      Move-Item $xmlPath -Destination $outputXmlPath
+
+      # already in DevOps, no need for extra copies
+      rm $(System.DefaultWorkingDirectory)\console-out.txt -ErrorAction Ignore
+
+      Remove-Item "$(System.DefaultWorkingDirectory)\buildtrees\*" -Recurse -errorAction silentlycontinue
+      Remove-Item "$(System.DefaultWorkingDirectory)\packages\*" -Recurse -errorAction silentlycontinue
+      Remove-Item "$(System.DefaultWorkingDirectory)\installed\*" -Recurse -errorAction silentlycontinue
+    displayName: 'Collect logs and cleanup build'
+
+  - powershell: |
+      $triplet = "$(triplet)"
+      $baselineFile = "$(System.DefaultWorkingDirectory)\scripts\ci.baseline.txt"
+      $failureLogsDir = "w:\fail"
+      if ("$(forceAllPortsToRebuildKey)" -ne "")
+      {
+        $failureLogsDir = "w:\force\$(forceAllPortsToRebuildKey)\fail"
+      }
+
+      ls "$(Build.ArtifactStagingDirectory)"
+      Write-Output "-----------------------------------------------"
+      $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\analyze-test-results.ps1 -baselineFile $baselineFile -logDir "$(System.ArtifactsDirectory)\raw xml results" -outputDir "$(Build.ArtifactStagingDirectory)" -failurelogDir $failureLogsDir -triplets "$triplet"  -errorOnRegression
+    displayName: 'Analyze results and prepare test logs'
+
+  - script: |
+      rem Originally this failure was emitted as part of the "Analyze results and prepare test logs" task
+      rem but because that is running a powershell script it causes the error message in the high level "status"
+      rem of the pipeline build to look very messy.  If there is a way to force the pipeline to fail in that task without
+      rem a messy error message then I am interested in giving it a try.  The quick solution for now is to create this
+      rem cmd task to cause a failure on Standard Error instead.
+
+      if EXIST $(Build.ArtifactStagingDirectory)\failureLogs (
+          echo "See '$(triplet) port build failure logs' artifact under summary tab for more information on failures" 1>&2
+      )
+    failOnStderr: true
+    displayName: 'Fail pipeline if errors'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: $(triplet) port build failure logs'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)\failureLogs'
+      ArtifactName: '$(triplet) port build failure logs'
+    condition: failed()
