@@ -87,7 +87,6 @@ jobs:
 
       Write-Output 'Cleaning packages'
       Remove-Item packages\* -Recurse -Force -errorAction silentlycontinue
-      Remove-Item archives\fail\* -Recurse -Force -errorAction silentlycontinue
 
       Write-Output 'Done'
       ls $(System.DefaultWorkingDirectory)
