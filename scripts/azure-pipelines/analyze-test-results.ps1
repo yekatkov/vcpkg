@@ -36,11 +36,11 @@ Param
 
 
 if ( -not (Test-Path $logDir) ) {
-    Write-Error "Log directory does not exist: $logDir"
+    [System.Console]::Error.WriteLine("Log directory does not exist: $logDir")
     exit
 }
 if ( -not (Test-Path $outputDir) ) {
-    Write-Error "output directory does not exist: $outputDir"
+    [System.Console]::Error.WriteLine("output directory does not exist: $outputDir")
     exit
 }
 
@@ -173,7 +173,7 @@ function build_baseline_results {
     $skip_hash = @{ }
     foreach ( $port in $baseline_list_raw | ? { $_ -match "=skip$" } | % { $_ -replace ":.*$" }) {
         if ($skip_hash[$port] -ne $null) {
-            Write-Error "$($port):$($triplet) has multiple definitions in $baselineFile"
+            [System.Console]::Error.WriteLine("$($port):$($triplet) has multiple definitions in $baselineFile")
         }
         $skip_hash[$port] = $true
     }
@@ -426,7 +426,7 @@ function save_failure_logs {
                 Write-Verbose "found failure log file"
 
                 Write-Verbose "Uncompressing $sourceFilename to $outputDir\failureLogs\$triplet\"
-                Write-Host "Uncompressing $sourceFilename to $outputDir\failureLogs\$triplet\"
+                Write-Output "Uncompressing $sourceFilename to $outputDir\failureLogs\$triplet\"
 
                 $destination = Join-Path (Join-Path "$outputDir" "failureLogs") "$triplet"
 
@@ -572,10 +572,14 @@ function write_errors_for_summary {
                 $prefix = "##vso[task.logissue type=error;code=100;]"
 
                 if ($test.currentResult -eq "pass") {
-                    Write-Host "$prefix PASSING, REMOVE FROM FAIL LIST: $($test.name):$triplet ($baselineFile)"
+                    [System.Console]::Error.WriteLine( `
+                    "$prefix PASSING, REMOVE FROM FAIL LIST: $($test.name):$triplet ($baselineFile)" `
+                    )
                 }
                 else {
-                    Write-Host "$prefix REGRESSION: $($test.name):$triplet. If expected, add $($test.name):$triplet=fail to $baselineFile."
+                    [System.Console]::Error.WriteLine( `
+                    "$prefix REGRESSION: $($test.name):$triplet. If expected, add $($test.name):$triplet=fail to $baselineFile." `
+                    )
                 }
             }
         }
@@ -621,10 +625,10 @@ if (-not $noTable) {
 
     write_summary_table -complete_results $complete_results -missing_triplets $missing_triplets | Out-File -FilePath $table_path -Encoding ascii
 
-    Write-Host ""
+    Write-Output ""
     cat $table_path
 
-    Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=$result_table_name issue summary;]$table_path"
+    Write-Output "##vso[task.addattachment type=Distributedtask.Core.Summary;name=$result_table_name issue summary;]$table_path"
 }
 
 foreach ( $triplet in $complete_results.Keys) {

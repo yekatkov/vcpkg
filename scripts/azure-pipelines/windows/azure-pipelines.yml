@@ -138,20 +138,8 @@ jobs:
       ls "$(Build.ArtifactStagingDirectory)"
       Write-Output "-----------------------------------------------"
       $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\analyze-test-results.ps1 -baselineFile $baselineFile -logDir "$(System.ArtifactsDirectory)\raw xml results" -outputDir "$(Build.ArtifactStagingDirectory)" -failurelogDir $failureLogsDir -triplets "$triplet"  -errorOnRegression
-    displayName: 'Analyze results and prepare test logs'
-
-  - script: |
-      rem Originally this failure was emitted as part of the "Analyze results and prepare test logs" task
-      rem but because that is running a powershell script it causes the error message in the high level "status"
-      rem of the pipeline build to look very messy.  If there is a way to force the pipeline to fail in that task without
-      rem a messy error message then I am interested in giving it a try.  The quick solution for now is to create this
-      rem cmd task to cause a failure on Standard Error instead.
-
-      if EXIST $(Build.ArtifactStagingDirectory)\failureLogs (
-          echo "See '$(triplet) port build failure logs' artifact under summary tab for more information on failures" 1>&2
-      )
     failOnStderr: true
-    displayName: 'Fail pipeline if errors'
+    displayName: 'Analyze results and prepare test logs'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: $(triplet) port build failure logs'
