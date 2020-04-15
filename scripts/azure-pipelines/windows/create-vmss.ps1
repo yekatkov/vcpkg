@@ -57,7 +57,7 @@ function New-Password {
   return $result
 }
 
-function Start-WaitForShutdown {
+function Wait-Shutdown {
   Param([string]$ResourceGroupName, [string]$Name)
 
   Write-Output "Waiting for $Name to stop..."
@@ -311,7 +311,7 @@ Write-Progress `
   -Status 'Waiting for VM to shut down' `
   -PercentComplete (100 / $TotalProgress * $CurrentProgress++)
 
-Start-WaitForShutdown -ResourceGroupName $ResourceGroupName -Name $ProtoVMName
+Wait-Shutdown -ResourceGroupName $ResourceGroupName -Name $ProtoVMName
 
 ####################################################################################################
 Write-Progress `
