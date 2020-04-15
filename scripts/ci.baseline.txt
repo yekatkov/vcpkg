@@ -1513,7 +1513,6 @@ qt5-activeqt:x64-linux=fail
 qt5-activeqt:x64-osx=fail
 qt5-activeqt:x64-uwp=skip
 qt5-activeqt:x64-windows-static=skip
-qt5-activeqt:x64-windows-static=skip
 qt5-activeqt:x64-windows=skip
 qt5-activeqt:x86-windows=skip
 qt5-macextras:x64-linux=fail
