@@ -94,7 +94,7 @@ jobs:
 
   - powershell: |
       $baselineFile = "$(System.DefaultWorkingDirectory)\scripts\ci.baseline.txt"
-      $skipList = $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\generate-skip-list.ps1 -Triplet $(triplet) -BaselineFile $baselineFile
+      $skipList = $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\generate-skip-list.ps1 -Triplet "$(triplet)" -BaselineFile $baselineFile
       Write-Output "baseline file: $baselineFile"
       Write-Output "skip list: $skipList"
       $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\windows\ci-step.ps1 -Triplet "$(triplet)" -ExcludePorts $skipList
