@@ -60,6 +60,7 @@ function New-Password {
 }
 
 function Wait-Shutdown {
+  [CmdletBinding()]
   Param([string]$ResourceGroupName, [string]$Name)
 
   Write-Output "Waiting for $Name to stop..."
@@ -75,16 +76,6 @@ function Wait-Shutdown {
     Write-Output "... not stopped yet, sleeping for 10 seconds"
     Start-Sleep -Seconds 10
   }
-}
-
-function Write-Reminders {
-  [CmdletBinding()]
-  Param([string]$AdminPW)
-
-  Write-Output "Location: $Location"
-  Write-Output "Resource group name: $ResourceGroupName"
-  Write-Output "User name: AdminUser"
-  Write-Output "Using generated password: $AdminPW"
 }
 
 function Sanitize-Name {
@@ -109,7 +100,6 @@ Write-Progress `
 
 $ResourceGroupName = Find-ResourceGroupName $Prefix
 $AdminPW = New-Password
-Write-Reminders $AdminPW
 New-AzResourceGroup -Name $ResourceGroupName -Location $Location
 $AdminPWSecure = ConvertTo-SecureString $AdminPW -AsPlainText -Force
 $Credential = New-Object System.Management.Automation.PSCredential ("AdminUser", $AdminPWSecure)
@@ -387,5 +377,8 @@ New-AzVmss `
 
 ####################################################################################################
 Write-Progress -Activity $ProgressActivity -Completed
-Write-Reminders $AdminPW
+Write-Output "Location: $Location"
+Write-Output "Resource group name: $ResourceGroupName"
+Write-Output "User name: AdminUser"
+Write-Output "Using generated password: $AdminPW"
 Write-Output 'Finished!'
