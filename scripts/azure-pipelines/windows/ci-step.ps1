@@ -5,9 +5,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Triplet,
-    [AllowEmptyString()][string]$OnlyIncludePorts = "",
-    [AllowEmptyString()][string]$ExcludePorts = "",
-    [AllowEmptyString()][string]$AdditionalVcpkgFlags = ""
+    [string]$OnlyIncludePorts = '',
+    [string]$ExcludePorts = '',
+    [string]$AdditionalVcpkgFlags = ''
 )
 
 Set-StrictMode -Version Latest

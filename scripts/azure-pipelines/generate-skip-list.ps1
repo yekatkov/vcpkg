@@ -3,8 +3,8 @@
 #
 
 Param(
-    [Parameter(Mandatory = $false)][string]$Triplet,
-    [Parameter(Mandatory = $false)][string]$BaselineFile
+    [Parameter][string]$Triplet,
+    [Parameter][string]$BaselineFile
 )
 
 $ErrorActionPreference = 'Stop'
