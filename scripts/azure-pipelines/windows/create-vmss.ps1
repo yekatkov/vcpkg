@@ -13,6 +13,7 @@ $ProtoVMName = 'PROTOTYPE'
 $LiveVMPrefix = 'BUILD'
 $WindowsServerSku = '2019-Datacenter'
 $InstalledDiskSizeInGB = 1024
+$ErrorActionPreference = 'Stop'
 
 $ProgressActivity = 'Creating Scale Set'
 $TotalProgress = 12

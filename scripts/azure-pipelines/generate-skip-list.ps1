@@ -7,6 +7,8 @@ Param(
     [Parameter(Mandatory = $false)][string]$BaselineFile
 )
 
+$ErrorActionPreference = 'Stop'
+
 if (-not (Test-Path -Path $BaselineFile)) {
     Write-Error "Unable to find baseline file $BaselineFile"
 }

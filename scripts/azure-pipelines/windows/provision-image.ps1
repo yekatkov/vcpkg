@@ -9,6 +9,8 @@ param(
   [string]$StorageAccountKey = $null
 )
 
+$ErrorActionPreference = 'Stop'
+
 Function Get-TempFilePath {
   Param(
     [String]$Extension

@@ -34,6 +34,7 @@ Param
     [string]$baselineFile
 )
 
+$ErrorActionPreference = 'Stop'
 
 if ( -not (Test-Path $logDir) ) {
     [System.Console]::Error.WriteLine("Log directory does not exist: $logDir")
