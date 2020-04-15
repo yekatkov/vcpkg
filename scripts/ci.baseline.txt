@@ -1507,11 +1507,11 @@ qscintilla:x64-linux=fail
 #     tools/qt5/bin/plugins/imageformats/qjpeg.dll
 #     tools/qt5/bin/plugins/platforms/qwindows.dll
 #     tools/qt5/bin/plugins/styles/qwindowsvistastyle.dll
-qt5-activeqt:arm-uwp
-qt5-activeqt:arm64-windows
+qt5-activeqt:arm-uwp=skip
+qt5-activeqt:arm64-windows=skip
 qt5-activeqt:x64-linux=fail
 qt5-activeqt:x64-osx=fail
-qt5-activeqt:x64-uwp
+qt5-activeqt:x64-uwp=skip
 qt5-activeqt:x64-windows-static=skip
 qt5-activeqt:x64-windows-static=skip
 qt5-activeqt:x64-windows=skip
