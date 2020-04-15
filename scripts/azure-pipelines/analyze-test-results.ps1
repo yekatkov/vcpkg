@@ -569,24 +569,14 @@ function write_errors_for_summary {
 
             if ($test.result -eq 'Fail') {
                 $failure_found = $true
-
-                #https://github.com/Rastaban/vcpkg/blob/test_docs/docs/maintainers/automated-testing.md
-                # ##vso[task.logissue]error/warning message
-                # type=error or warning (Required)
-                # sourcepath=source file location
-                # linenumber=line number
-                # columnnumber=column number
-                # code=error or warning code
-                $prefix = "##vso[task.logissue type=error;code=100;]"
-
                 if ($test.currentResult -eq "pass") {
                     [System.Console]::Error.WriteLine( `
-                            "$prefix PASSING, REMOVE FROM FAIL LIST: $($test.name):$triplet ($baselineFile)" `
+                            "PASSING, REMOVE FROM FAIL LIST: $($test.name):$triplet ($baselineFile)" `
                     )
                 }
                 else {
                     [System.Console]::Error.WriteLine( `
-                            "$prefix REGRESSION: $($test.name):$triplet. If expected, add $($test.name):$triplet=fail to $baselineFile." `
+                            "REGRESSION: $($test.name):$triplet. If expected, add $($test.name):$triplet=fail to $baselineFile." `
                     )
                 }
             }
@@ -609,7 +599,7 @@ foreach ( $triplet in $triplets) {
     $baseline_results = build_baseline_results -baselineFile $baselineFile -triplet $triplet
 
     if ($current_test_hash -eq $null) {
-        Write-Warning "##vso[task.logissue type=error;code=100;]Missing $triplet test results in current test run"
+        [System.Console]::Error.WriteLine("Missing $triplet test results in current test run")
         $missing_triplets[$triplet] = "test"
     }
     else {
