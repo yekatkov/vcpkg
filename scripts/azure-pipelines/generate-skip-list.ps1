@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 #
 
+[CmdletBinding()]
 Param(
     [Parameter][string]$Triplet,
     [Parameter][string]$BaselineFile

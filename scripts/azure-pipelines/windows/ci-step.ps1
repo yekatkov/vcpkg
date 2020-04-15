@@ -15,6 +15,7 @@ Set-StrictMode -Version Latest
 $scriptsDir = Split-Path -parent $script:MyInvocation.MyCommand.Definition
 
 function Get-FileRecursivelyUp() {
+    [CmdletBinding()]
     param(
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory = $true)][string]$startingDir,
@@ -33,7 +34,10 @@ function Get-FileRecursivelyUp() {
     return $currentDir
 }
 
-function Remove-VcpkgItem([Parameter(Mandatory = $true)][string]$Path) {
+function Remove-VcpkgItem {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string]$Path)
+
     if ([string]::IsNullOrEmpty($Path)) {
         return
     }

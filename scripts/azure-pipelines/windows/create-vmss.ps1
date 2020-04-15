@@ -20,6 +20,7 @@ $TotalProgress = 12
 $CurrentProgress = 1
 
 function Find-ResourceGroupNameCollision {
+  [CmdletBinding()]
   Param([string]$Test, [string[]]$Resources)
 
   foreach ($resource in $Resources) {
@@ -32,6 +33,7 @@ function Find-ResourceGroupNameCollision {
 }
 
 function Find-ResourceGroupName {
+  [CmdletBinding()]
   Param([string] $Prefix)
 
   $resources = Get-AzResourceGroup
@@ -76,6 +78,7 @@ function Wait-Shutdown {
 }
 
 function Write-Reminders {
+  [CmdletBinding()]
   Param([string]$AdminPW)
 
   Write-Output "Location: $Location"
@@ -85,6 +88,7 @@ function Write-Reminders {
 }
 
 function Sanitize-Name {
+  [CmdletBinding()]
   Param(
     [string]$RawName
   )

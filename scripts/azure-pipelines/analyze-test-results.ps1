@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 #
 
+[CmdletBinding()]
 Param
 (
     # Directory of xml test logs to analyze
@@ -77,11 +78,12 @@ if ( $triplets.Count -eq 0 ) {
 #     abi_tag: The port hash
 #     features: The features installed
 function build_test_results {
+    [CmdletBinding()]
     Param
     (
-        $xmlFilename
+        [string]$xmlFilename
     )
-    if ( ($xmlFilename.length -eq 0) -or ( -not( Test-Path $xmlFilename))) {
+    if ( ($xmlFilename.Length -eq 0) -or ( -not( Test-Path $xmlFilename))) {
         #write-error "Missing file: $xmlFilename"
         return $null
     }
@@ -162,6 +164,7 @@ function build_test_results {
 # ignore: ports marked as ignore
 # *there is no "pass" collection because that is the default
 function build_baseline_results {
+    [CmdletBinding()]
     Param(
         $baselineFile,
         $triplet
@@ -211,6 +214,7 @@ function build_baseline_results {
 #     features:
 # ignored: list of ignored tests
 function combine_results {
+    [CmdletBinding()]
     Param
     (
         $baseline,
@@ -327,6 +331,7 @@ function combine_results {
 }
 
 function write_xunit_results {
+    [CmdletBinding()]
     Param(
         $combined_results
     )
@@ -396,6 +401,7 @@ function write_xunit_results {
 }
 
 function save_failure_logs {
+    [CmdletBinding()]
     Param(
         $combined_results
     )
@@ -479,6 +485,7 @@ function save_failure_logs {
 }
 
 function write_summary_table {
+    [CmdletBinding()]
     Param(
         $complete_results,
         $missing_triplets
@@ -540,6 +547,7 @@ function write_summary_table {
 }
 
 function write_errors_for_summary {
+    [CmdletBinding()]
     Param(
         $complete_results
     )
