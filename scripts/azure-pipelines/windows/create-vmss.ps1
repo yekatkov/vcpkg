@@ -89,17 +89,7 @@ function Sanitize-Name {
     [string]$RawName
   )
 
-  $RawName = $RawName.ToLowerInvariant()
-
-  $result = ''
-  foreach ($ch in $RawName.ToCharArray()) {
-    if ($ch -eq '-') {
-      continue
-    }
-
-    $result += $ch
-  }
-
+  $result = $RawName.Replace('-', '').ToLowerInvariant()
   if ($result.Length -gt 24) {
     Write-Error 'Sanitized name for storage account $result was too long.'
   }
