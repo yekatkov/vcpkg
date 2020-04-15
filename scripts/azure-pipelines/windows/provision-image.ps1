@@ -96,12 +96,12 @@ Function PrintMsiExitCodeMessage {
     $ExitCode
   )
 
+  # 3010 is probably ERROR_SUCCESS_REBOOT_REQUIRED
   if ($ExitCode -eq 0 -or $ExitCode -eq 3010) {
     Write-Output "Installation successful! Exited with $ExitCode."
   }
   else {
-    Write-Output "Installation failed! Exited with $ExitCode."
-    exit $ExitCode
+    Write-Error "Installation failed! Exited with $ExitCode."
   }
 }
 
@@ -138,9 +138,7 @@ Function InstallVisualStudio {
     PrintMsiExitCodeMessage $proc.ExitCode
   }
   catch {
-    Write-Output 'Failed to install Visual Studio!'
-    Write-Output $_.Exception.Message
-    exit 1
+    Write-Error "Failed to install Visual Studio! $($_.Exception.Message)"
   }
 }
 
@@ -160,9 +158,7 @@ Function InstallMSI {
     PrintMsiExitCodeMessage $proc.ExitCode
   }
   catch {
-    Write-Output "Failed to install $Name!"
-    Write-Output $_.Exception.Message
-    exit -1
+    Write-Error "Failed to install $Name! $($_.Exception.Message)"
   }
 }
 
@@ -181,9 +177,7 @@ Function InstallZip {
     Expand-Archive -Path $zipPath -DestinationPath $Dir -Force
   }
   catch {
-    Write-Output "Failed to install $Name!"
-    Write-Output $_.Exception.Message
-    exit -1
+    Write-Error "Failed to install $Name! $($_.Exception.Message)"
   }
 }
 
@@ -203,14 +197,11 @@ Function InstallMpi {
       Write-Output 'Installation successful!'
     }
     else {
-      Write-Output "Installation failed! Exited with $exitCode."
-      exit $exitCode
+      Write-Error "Installation failed! Exited with $exitCode."
     }
   }
   catch {
-    Write-Output "Failed to install MPI!"
-    Write-Output $_.Exception.Message
-    exit -1
+    Write-Error "Failed to install MPI! $($_.Exception.Message)"
   }
 }
 
@@ -231,14 +222,11 @@ Function InstallCuda {
       Write-Output 'Installation successful!'
     }
     else {
-      Write-Output "Installation failed! Exited with $exitCode."
-      exit $exitCode
+      Write-Error "Installation failed! Exited with $exitCode."
     }
   }
   catch {
-    Write-Output "Failed to install CUDA!"
-    Write-Output $_.Exception.Message
-    exit -1
+    Write-Error "Failed to install CUDA! $($_.Exception.Message)"
   }
 }
 
@@ -280,9 +268,7 @@ Function New-PhysicalDisk {
     & diskpart.exe /s $diskpartScriptPath
   }
   catch {
-    Write-Output "Failed to provision physical disk $DiskNumber as drive $Letter!"
-    Write-Output $_.Exception.Message
-    exit -1
+    Write-Error "Failed to provision physical disk $DiskNumber as drive $Letter! $($_.Exception.Message)"
   }
 }
 
