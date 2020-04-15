@@ -4,8 +4,8 @@
 
 [CmdletBinding()]
 Param(
-    [Parameter][string]$Triplet,
-    [Parameter][string]$BaselineFile
+    [string]$Triplet,
+    [string]$BaselineFile
 )
 
 $ErrorActionPreference = 'Stop'
