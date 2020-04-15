@@ -1508,7 +1508,7 @@ qt5-activeqt:x64-osx=fail
 #    tools/qt5/bin/plugins/imageformats/qjpeg.dll
 #    tools/qt5/bin/plugins/platforms/qwindows.dll
 #    tools/qt5/bin/plugins/styles/qwindowsvistastyle.dll
-qt5-declarative:x86-windows=ignore
+qt5-declarative:x86-windows=skip
 qt5-macextras:x64-linux=fail
 qt5-macextras:x64-windows=fail
 qt5-macextras:x64-windows-static=fail
