@@ -64,10 +64,10 @@ function Remove-VcpkgItem {
 
 $vcpkgRootDir = Get-FileRecursivelyUp $scriptsDir .vcpkg-root
 
-Write-Output "Bootstrapping vcpkg ..."
+Write-Host "Bootstrapping vcpkg ..."
 & "$vcpkgRootDir\bootstrap-vcpkg.bat" -Verbose
 if (!$?) { throw "bootstrap failed" }
-Write-Output "Bootstrapping vcpkg ... done."
+Write-Host "Bootstrapping vcpkg ... done."
 
 $ciXmlPath = "$vcpkgRootDir\test-full-ci.xml"
 $consoleOuputPath = "$vcpkgRootDir\console-out.txt"
@@ -105,4 +105,4 @@ else {
     "" | Out-File -FilePath "$consoleOuputPath"
 }
 
-Write-Output "CI test is complete"
+Write-Host "CI test is complete"

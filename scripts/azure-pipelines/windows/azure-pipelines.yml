@@ -5,7 +5,7 @@
 jobs:
 - job: ${{ parameters.jobName }}
   pool:
-    name: PrWin-2020-04-13
+    name: PrWin-2020-04-15
 
   variables:
     triplet: '${{ parameters.triplet }}'
@@ -25,17 +25,17 @@ jobs:
           }
       }
 
-      Write-Output 'Setting up archives mount'
+      Write-Host 'Setting up archives mount'
       if (-Not (Test-Path W:)) {
           net use W: "\\$StorageAccountName.file.core.windows.net\archives" /u:"AZURE\$StorageAccountName" $StorageAccountKey
       }
 
-      Write-Output 'Setting up logs mount'
+      Write-Host 'Setting up logs mount'
       if (-Not (Test-Path L:)) {
           net use L: "\\$StorageAccountName.file.core.windows.net\logs" /u:"AZURE\$StorageAccountName" $StorageAccountKey
       }
 
-      Write-Output 'Creating downloads directory'
+      Write-Host 'Creating downloads directory'
       mkdir D:\downloads -ErrorAction SilentlyContinue
 
       # Delete entries in the downloads folder, except:
@@ -50,11 +50,11 @@ jobs:
       # work around this by just removing the vcpkg installed msys2 if it exists
       if( Test-Path D:\downloads\tools\msys2 )
       {
-          Write-Output "removing previously installed msys2"
+          Write-Host "removing previously installed msys2"
           rm D:\downloads\tools\msys2 -Recurse -Force
       }
 
-      Write-Output 'Setting up archives path...'
+      Write-Host 'Setting up archives path...'
       if ("$(forceAllPortsToRebuildKey)" -eq "")
       {
           $archivesPath = 'W:\'
@@ -63,42 +63,42 @@ jobs:
       {
           $archivesPath = "W:\force\$(forceAllPortsToRebuildKey)"
           if (-Not (Test-Path $fullPath)) {
-              Write-Output 'Creating $archivesPath'
+              Write-Host 'Creating $archivesPath'
               mkdir $archivesPath
           }
       }
 
-      Write-Output "Linking archives => $archivesPath"
+      Write-Host "Linking archives => $archivesPath"
       Remove-DirectorySymlink archives
       cmd /c "mklink /D archives $archivesPath"
 
-      Write-Output 'Linking installed => E:\installed'
+      Write-Host 'Linking installed => E:\installed'
       Remove-DirectorySymlink installed
       Remove-Item E:\installed -Recurse -Force -ErrorAction SilentlyContinue
       mkdir E:\installed
       cmd /c "mklink /D installed E:\installed"
 
-      Write-Output 'Linking downloads => D:\downloads'
+      Write-Host 'Linking downloads => D:\downloads'
       Remove-DirectorySymlink downloads
       cmd /c "mklink /D downloads D:\downloads"
 
-      Write-Output 'Cleaning buildtrees'
+      Write-Host 'Cleaning buildtrees'
       Remove-Item buildtrees\* -Recurse -Force -errorAction silentlycontinue
 
-      Write-Output 'Cleaning packages'
+      Write-Host 'Cleaning packages'
       Remove-Item packages\* -Recurse -Force -errorAction silentlycontinue
 
-      Write-Output 'Done'
+      Write-Host 'Done'
       ls $(System.DefaultWorkingDirectory)
     displayName: 'Initialize Environment'
 
   - powershell: |
       $baselineFile = "$(System.DefaultWorkingDirectory)\scripts\ci.baseline.txt"
       $skipList = $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\generate-skip-list.ps1 -Triplet "$(triplet)" -BaselineFile $baselineFile
-      Write-Output "baseline file: $baselineFile"
-      Write-Output "skip list: $skipList"
+      Write-Host "baseline file: $baselineFile"
+      Write-Host "skip list: $skipList"
       $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\windows\ci-step.ps1 -Triplet "$(triplet)" -ExcludePorts $skipList
-      Write-Output "CI test script is complete"
+      Write-Host "CI test script is complete"
     errorActionPreference: continue
     displayName: '** Build vcpkg and test ports **'
 
@@ -107,7 +107,7 @@ jobs:
       $outputPathRoot = "$(System.ArtifactsDirectory)\raw xml results"
       if(-not (Test-Path $outputPathRoot))
       {
-          Write-Output "creating $outputPathRoot"
+          Write-Host "creating $outputPathRoot"
           mkdir $outputPathRoot | Out-Null
       }
 
@@ -135,7 +135,7 @@ jobs:
       }
 
       ls "$(Build.ArtifactStagingDirectory)"
-      Write-Output "-----------------------------------------------"
+      Write-Host "-----------------------------------------------"
       $(System.DefaultWorkingDirectory)\scripts\azure-pipelines\analyze-test-results.ps1 -baselineFile $baselineFile -logDir "$(System.ArtifactsDirectory)\raw xml results" -outputDir "$(Build.ArtifactStagingDirectory)" -failurelogDir $failureLogsDir -triplets "$triplet"  -errorOnRegression
     failOnStderr: true
     displayName: 'Analyze results and prepare test logs'

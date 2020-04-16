@@ -63,7 +63,7 @@ function Wait-Shutdown {
   [CmdletBinding()]
   Param([string]$ResourceGroupName, [string]$Name)
 
-  Write-Output "Waiting for $Name to stop..."
+  Write-Host "Waiting for $Name to stop..."
   while ($true) {
     $Vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $Name -Status
     $highestStatus = $Vm.Statuses.Count
@@ -73,7 +73,7 @@ function Wait-Shutdown {
       }
     }
 
-    Write-Output "... not stopped yet, sleeping for 10 seconds"
+    Write-Host "... not stopped yet, sleeping for 10 seconds"
     Start-Sleep -Seconds 10
   }
 }
@@ -377,8 +377,8 @@ New-AzVmss `
 
 ####################################################################################################
 Write-Progress -Activity $ProgressActivity -Completed
-Write-Output "Location: $Location"
-Write-Output "Resource group name: $ResourceGroupName"
-Write-Output "User name: AdminUser"
-Write-Output "Using generated password: $AdminPW"
-Write-Output 'Finished!'
+Write-Host "Location: $Location"
+Write-Host "Resource group name: $ResourceGroupName"
+Write-Host "User name: AdminUser"
+Write-Host "Using generated password: $AdminPW"
+Write-Host 'Finished!'

@@ -432,7 +432,7 @@ function save_failure_logs {
                 Write-Verbose "found failure log file"
 
                 Write-Verbose "Uncompressing $sourceFilename to $outputDir\failureLogs\$triplet\"
-                Write-Output "Uncompressing $sourceFilename to $outputDir\failureLogs\$triplet\"
+                Write-Host "Uncompressing $sourceFilename to $outputDir\failureLogs\$triplet\"
 
                 $destination = Join-Path (Join-Path "$outputDir" "failureLogs") "$triplet"
 
@@ -623,10 +623,10 @@ if (-not $noTable) {
 
     write_summary_table -complete_results $complete_results -missing_triplets $missing_triplets | Out-File -FilePath $table_path -Encoding ascii
 
-    Write-Output ""
+    Write-Host ""
     cat $table_path
 
-    Write-Output "##vso[task.addattachment type=Distributedtask.Core.Summary;name=$result_table_name issue summary;]$table_path"
+    Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=$result_table_name issue summary;]$table_path"
 }
 
 foreach ( $triplet in $complete_results.Keys) {

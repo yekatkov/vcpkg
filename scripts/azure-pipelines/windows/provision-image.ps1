@@ -26,9 +26,9 @@ Function Get-TempFilePath {
 }
 
 if (-not [string]::IsNullOrEmpty($AdminUserPassword)) {
-  Write-Output "AdminUser password supplied; switching to AdminUser"
+  Write-Host "AdminUser password supplied; switching to AdminUser"
   $PsExecPath = Get-TempFilePath -Extension 'exe'
-  Write-Output "Downloading psexec to $PsExecPath"
+  Write-Host "Downloading psexec to $PsExecPath"
   & curl.exe -L -o $PsExecPath -s -S https://live.sysinternals.com/PsExec64.exe
   $PsExecArgs = @(
     '-u',
@@ -54,10 +54,10 @@ if (-not [string]::IsNullOrEmpty($AdminUserPassword)) {
     $PsExecArgs += $StorageAccountKey
   }
 
-  Write-Output "Executing $PsExecPath " + @PsExecArgs
+  Write-Host "Executing $PsExecPath " + @PsExecArgs
 
   $proc = Start-Process -FilePath $PsExecPath -ArgumentList $PsExecArgs -Wait -PassThru
-  Write-Output 'Cleaning up...'
+  Write-Host 'Cleaning up...'
   Remove-Item $PsExecPath
   exit $proc.ExitCode
 }
@@ -98,7 +98,7 @@ Function PrintMsiExitCodeMessage {
 
   # 3010 is probably ERROR_SUCCESS_REBOOT_REQUIRED
   if ($ExitCode -eq 0 -or $ExitCode -eq 3010) {
-    Write-Output "Installation successful! Exited with $ExitCode."
+    Write-Host "Installation successful! Exited with $ExitCode."
   }
   else {
     Write-Error "Installation failed! Exited with $ExitCode."
@@ -114,10 +114,10 @@ Function InstallVisualStudio {
   )
 
   try {
-    Write-Output 'Downloading Visual Studio...'
+    Write-Host 'Downloading Visual Studio...'
     [string]$bootstrapperExe = Get-TempFilePath -Extension 'exe'
     curl.exe -L -o $bootstrapperExe -s -S $BootstrapperUrl
-    Write-Output "Installing Visual Studio..."
+    Write-Host "Installing Visual Studio..."
     $args = @('/c', $bootstrapperExe, '--quiet', '--norestart', '--wait', '--nocache')
     foreach ($workload in $Workloads) {
       $args += '--add'
@@ -149,10 +149,10 @@ Function InstallMSI {
   )
 
   try {
-    Write-Output "Downloading $Name..."
+    Write-Host "Downloading $Name..."
     [string]$msiPath = Get-TempFilePath -Extension 'msi'
     curl.exe -L -o $msiPath -s -S $Url
-    Write-Output "Installing $Name..."
+    Write-Host "Installing $Name..."
     $args = @('/i', $msiPath, '/norestart', '/quiet', '/qn')
     $proc = Start-Process -FilePath 'msiexec.exe' -ArgumentList $args -Wait -PassThru
     PrintMsiExitCodeMessage $proc.ExitCode
@@ -170,10 +170,10 @@ Function InstallZip {
   )
 
   try {
-    Write-Output "Downloading $Name..."
+    Write-Host "Downloading $Name..."
     [string]$zipPath = Get-TempFilePath -Extension 'zip'
     curl.exe -L -o $zipPath -s -S $Url
-    Write-Output "Installing $Name..."
+    Write-Host "Installing $Name..."
     Expand-Archive -Path $zipPath -DestinationPath $Dir -Force
   }
   catch {
@@ -187,14 +187,14 @@ Function InstallMpi {
   )
 
   try {
-    Write-Output 'Downloading MPI...'
+    Write-Host 'Downloading MPI...'
     [string]$installerPath = Get-TempFilePath -Extension 'exe'
     curl.exe -L -o $installerPath -s -S $Url
-    Write-Output 'Installing MPI...'
+    Write-Host 'Installing MPI...'
     $proc = Start-Process -FilePath $installerPath -ArgumentList @('-force', '-unattend') -Wait -PassThru
     $exitCode = $proc.ExitCode
     if ($exitCode -eq 0) {
-      Write-Output 'Installation successful!'
+      Write-Host 'Installation successful!'
     }
     else {
       Write-Error "Installation failed! Exited with $exitCode."
@@ -212,14 +212,14 @@ Function InstallCuda {
   )
 
   try {
-    Write-Output 'Downloading CUDA...'
+    Write-Host 'Downloading CUDA...'
     [string]$installerPath = Get-TempFilePath -Extension 'exe'
     curl.exe -L -o $installerPath -s -S $Url
-    Write-Output 'Installing CUDA...'
+    Write-Host 'Installing CUDA...'
     $proc = Start-Process -FilePath $installerPath -ArgumentList @('-s ' + $Features) -Wait -PassThru
     $exitCode = $proc.ExitCode
     if ($exitCode -eq 0) {
-      Write-Output 'Installation successful!'
+      Write-Host 'Installation successful!'
     }
     else {
       Write-Error "Installation failed! Exited with $exitCode."
@@ -242,29 +242,29 @@ Function New-PhysicalDisk {
   }
 
   try {
-    Write-Output "Attempting to online physical disk $DiskNumber"
+    Write-Host "Attempting to online physical disk $DiskNumber"
     [string]$diskpartScriptPath = Get-TempFilePath -Extension 'txt'
     [string]$diskpartScriptContent =
     "SELECT DISK $DiskNumber`r`n" +
     "ONLINE DISK`r`n"
 
-    Write-Output "Writing diskpart script to $diskpartScriptPath with content:"
-    Write-Output $diskpartScriptContent
+    Write-Host "Writing diskpart script to $diskpartScriptPath with content:"
+    Write-Host $diskpartScriptContent
     Set-Content -Path $diskpartScriptPath -Value $diskpartScriptContent
-    Write-Output 'Invoking DISKPART...'
+    Write-Host 'Invoking DISKPART...'
     & diskpart.exe /s $diskpartScriptPath
 
-    Write-Output "Provisioning physical disk $DiskNumber as drive $Letter"
+    Write-Host "Provisioning physical disk $DiskNumber as drive $Letter"
     [string]$diskpartScriptContent =
     "SELECT DISK $DiskNumber`r`n" +
     "ATTRIBUTES DISK CLEAR READONLY`r`n" +
     "CREATE PARTITION PRIMARY`r`n" +
     "FORMAT FS=NTFS LABEL=`"$Label`" QUICK`r`n" +
     "ASSIGN LETTER=$Letter`r`n"
-    Write-Output "Writing diskpart script to $diskpartScriptPath with content:"
-    Write-Output $diskpartScriptContent
+    Write-Host "Writing diskpart script to $diskpartScriptPath with content:"
+    Write-Host $diskpartScriptContent
     Set-Content -Path $diskpartScriptPath -Value $diskpartScriptContent
-    Write-Output 'Invoking DISKPART...'
+    Write-Host 'Invoking DISKPART...'
     & diskpart.exe /s $diskpartScriptPath
   }
   catch {
@@ -272,7 +272,7 @@ Function New-PhysicalDisk {
   }
 }
 
-Write-Output "AdminUser password not supplied; assuming already running as AdminUser"
+Write-Host "AdminUser password not supplied; assuming already running as AdminUser"
 
 New-PhysicalDisk -DiskNumber 2 -Letter 'E' -Label 'install disk'
 
@@ -295,13 +295,13 @@ InstallMpi -Url $MpiUrl
 InstallCuda -Url $CudaUrl -Features $CudaFeatures
 InstallZip -Url $BinSkimUrl -Name 'BinSkim' -Dir 'C:\BinSkim'
 if (-Not ([string]::IsNullOrWhiteSpace($StorageAccountName))) {
-  Write-Output 'Storing storage account name to environment'
+  Write-Host 'Storing storage account name to environment'
   Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' `
     -Name StorageAccountName `
     -Value $StorageAccountName
 }
 if (-Not ([string]::IsNullOrWhiteSpace($StorageAccountKey))) {
-  Write-Output 'Storing storage account key to environment'
+  Write-Host 'Storing storage account key to environment'
   Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' `
     -Name StorageAccountKey `
     -Value $StorageAccountKey
