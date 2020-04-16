@@ -8,7 +8,7 @@
 
 $Location = 'westus2'
 $Prefix = 'PrWin-' + (Get-Date -Format 'yyyy-MM-dd')
-$VMSize = 'Standard_D16as_v4'
+$VMSize = 'Standard_F16s_v2'
 $ProtoVMName = 'PROTOTYPE'
 $LiveVMPrefix = 'BUILD'
 $WindowsServerSku = '2019-Datacenter'
