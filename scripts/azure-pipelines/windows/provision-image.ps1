@@ -20,13 +20,11 @@ The administrator user's password; if this is $null, or not passed, then the
 script assumes it's running on an administrator account.
 
 .PARAMETER StorageAccountName
-The name of the storage account. Stored in
-HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\StorageAccountName
+The name of the storage account. Stored in the environment variable %StorageAccountName%.
 Used by the CI system to access the global storage.
 
 .PARAMETER StorageAccountKey
-The key of the storage account. Stored in
-HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\StorageAccountKey
+The key of the storage account. Stored in the environment variable %StorageAccountKey%.
 Used by the CI system to access the global storage.
 #>
 param(
