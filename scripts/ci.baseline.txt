@@ -342,6 +342,7 @@ dlfcn-win32:x64-linux=fail
 dlfcn-win32:x64-osx=fail
 dlfcn-win32:x64-uwp=fail
 dmlc:arm-uwp=fail
+dmlc:arm64-windows=ignore
 dmlc:x64-uwp=fail
 dmlc:x64-windows-static=ignore
 dmlc:x86-windows=ignore
