@@ -220,11 +220,12 @@ function build_baseline_results {
         $triplet
     )
     #read in the file, strip out comments and blank lines and spaces, leave only the current triplet
+    #remove comments, remove empty lines, remove whitespace, then keep only those lines for $triplet
     $baseline_list_raw = Get-Content -Path $baselineFile `
-        | ? { -not ($_ -match "\s*#") } ` # remove comments
-        | ? { -not ( $_ -match "^\s*$") } ` # remove empty lines
-        | % { $_ -replace "\s" } ` # remove whitespace
-        | ? { $_ -match ":$triplet=" } # only keep those that are for our triplet
+        | Where-Object { -not ($_ -match "\s*#") } `
+        | Where-Object { -not ( $_ -match "^\s*$") } `
+        | ForEach-Object { $_ -replace "\s" } `
+        | Where-Object { $_ -match ":$triplet=" }
 
     #filter to skipped and trim the triplet
     $skip_hash = @{ }
