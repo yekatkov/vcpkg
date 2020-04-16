@@ -875,13 +875,6 @@ libpng-apng:x64-uwp            = skip
 libpng-apng:x64-windows        = skip
 libpng-apng:x64-windows-static = skip
 libpng-apng:x86-windows        = skip
-# The server hosting the libpopt sources appears to be offline
-libpopt:arm-uwp=fail
-libpopt:arm64-windows=fail
-libpopt:x64-uwp=fail
-libpopt:x64-windows-static=fail
-libpopt:x64-windows=fail
-libpopt:x86-windows=fail
 libpq:arm-uwp=fail
 libpq:x64-uwp=fail
 librabbitmq:x64-linux=ignore
