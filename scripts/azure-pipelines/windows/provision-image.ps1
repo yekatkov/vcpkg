@@ -76,7 +76,7 @@ $Workloads = @(
   'Microsoft.Component.NetFX.Native'
 )
 
-$VisualStudioBootstrapperUrl = 'https://aka.ms/vs/16/release/vs_community.exe'
+$VisualStudioBootstrapperUrl = 'https://aka.ms/vs/16/release/vs_enterprise.exe'
 $MpiUrl = 'https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe'
 
 $CudaUrl = 'https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_426.00_win10.exe'
