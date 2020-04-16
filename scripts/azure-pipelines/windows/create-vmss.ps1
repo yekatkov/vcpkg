@@ -6,7 +6,7 @@
 # or are running from Azure Cloud Shell.
 #
 
-$Location = 'southcentralus'
+$Location = 'westus2'
 $Prefix = 'PrWin-' + (Get-Date -Format 'yyyy-MM-dd')
 $VMSize = 'Standard_F16s_v2'
 $ProtoVMName = 'PROTOTYPE'
