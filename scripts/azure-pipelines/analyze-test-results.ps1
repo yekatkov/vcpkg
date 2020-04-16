@@ -2,35 +2,53 @@
 # SPDX-License-Identifier: MIT
 #
 
+<#
+.SYNOPSIS
+Analyze the test results as output by the CI system.
+
+.DESCRIPTION
+Takes the set of port test results from $logDir,
+and the baseline from $baselineFile, and makes certain that the set
+of failures we expected are exactly the set of failures we got.
+Then, uploads the logs from any unexpected failures.
+
+.PARAMETER logDir
+Directory of xml test logs to analyze.
+
+.PARAMETER failurelogDir
+Path to the failure logs that need to be published to azure for inspection.
+
+.PARAMETER outputDir
+Where to write out the results of the analysis.
+
+.PARAMETER allResults
+Include tests that have no change from the baseline in the output.
+
+.PARAMETER errorOnRegression
+Output an error on test regressions.
+This will give a clean message in the build pipeline.
+
+.PARAMETER noTable
+Don't create or upload the markdown table of results
+
+.PARAMETER triplets
+A list of triplets to analyze; defaults to all triplets.
+
+.PARAMETER baselineFile
+The path to the ci.baseline.txt file in the vcpkg repository.
+#>
 [CmdletBinding()]
-Param
-(
-    # Directory of xml test logs to analyze
+Param(
     [Parameter(Mandatory = $true)]
     [string]$logDir,
-
-    # Path to the hashed failure logs that need attached on failure
     [Parameter(Mandatory = $true)]
     [string]$failurelogDir,
-
-    # Where to write out the results of the analysis
     [Parameter(Mandatory = $true)]
     [string]$outputDir,
-
-    # include tests that have no change from the baseline in the output
     [switch]$allResults,
-
-    # Output an error on test regressions.
-    # This will give a clean message in the build pipeline
     [switch]$errorOnRegression,
-
-    # Don't create or upload the markdown table of results
     [switch]$noTable,
-
-    # list of triplets to analyze, defaults to all triplets
     [string[]]$triplets = @(),
-
-    # baseline ci results file in vcpkg repository
     [Parameter(Mandatory = $true)]
     [string]$baselineFile
 )
@@ -61,22 +79,36 @@ if ( $triplets.Count -eq 0 ) {
 }
 
 
-# Creates an object the represents the test run.
-# assemblyName:
-# assemblyStartDate:
-# assemblyStartTime:
-# assemblyTime:
-# collectionName:
-# collectionTime:
-# allTests: A lookup table with an entry for each port tested
-#   The key is the name of the port
-#   The value is an object with the following elements
-#     name: Name of the port (Does not include the triplet name)
-#     result: Pass/Fail/Skip result from xunit
-#     time: Test time in seconds
-#     originalResult: Result as defined by Build.h in vcpkg source code
-#     abi_tag: The port hash
-#     features: The features installed
+<#
+.SYNOPSIS
+Creates an object the represents the test run.
+
+.DESCRIPTION
+build_test_results takes an XML file of results from the CI run,
+and constructs an object based on that XML file for further
+processing.
+
+.OUTPUTS
+An object with the following elements:
+    assemblyName:
+    assemblyStartDate:
+    assemblyStartTime:
+    assemblyTime:
+    collectionName:
+    collectionTime:
+    allTests: A hashtable with an entry for each port tested
+        The key is the name of the port
+        The value is an object with the following elements:
+            name: Name of the port (Does not include the triplet name)
+            result: Pass/Fail/Skip result from xunit
+            time: Test time in seconds
+            originalResult: Result as defined by Build.h in vcpkg source code
+            abi_tag: The port hash
+            features: The features installed
+
+.PARAMETER xmlFilename
+The path to the XML file to parse.
+#>
 function build_test_results {
     [CmdletBinding()]
     Param
@@ -154,15 +186,33 @@ function build_test_results {
     }
 }
 
-# Creates an object that represents the baseline expectations
-# The file records three states 1-pass 2-fail 3-skip.
-# If the entry is not found then it is expected to pass
-#
-# collectionName: the triplet
-# fail: ports marked as fail
-# skip: ports marked as skipped
-# ignore: ports marked as ignore
-# *there is no "pass" collection because that is the default
+<#
+.SYNOPSIS
+Creates an object that represents the baseline expectations.
+
+.DESCRIPTION
+build_baseline_results converts the baseline file to an object representing
+the expectations set up by the baseline file. It records four states:
+    1) fail
+    2) skip
+    3) ignore
+    4) pass -- this is represented by not being recorded
+In other words, if a port is not contained in the object returned by this
+cmdlet, expect it to pass.
+
+.OUTPUTS
+An object containing the following fields:
+    collectionName: the triplet
+    fail: ports marked as fail
+    skip: ports marked as skipped
+    ignore: ports marked as ignore
+
+.PARAMETER baselineFile
+The path to vcpkg's ci.baseline.txt.
+
+.PARAMETER triplet
+The triplet to create the result object for.
+#>
 function build_baseline_results {
     [CmdletBinding()]
     Param(
@@ -170,7 +220,11 @@ function build_baseline_results {
         $triplet
     )
     #read in the file, strip out comments and blank lines and spaces, leave only the current triplet
-    $baseline_list_raw = Get-Content -Path $baselineFile | ? { -not ($_ -match "\s*#") } | ? { -not ( $_ -match "^\s*$") } | % { $_ -replace "\s" } | ? { $_ -match ":$triplet=" }
+    $baseline_list_raw = Get-Content -Path $baselineFile `
+        | ? { -not ($_ -match "\s*#") } ` # remove comments
+        | ? { -not ( $_ -match "^\s*$") } ` # remove empty lines
+        | % { $_ -replace "\s" } ` # remove whitespace
+        | ? { $_ -match ":$triplet=" } # only keep those that are for our triplet
 
     #filter to skipped and trim the triplet
     $skip_hash = @{ }
@@ -193,26 +247,41 @@ function build_baseline_results {
     }
 }
 
-# analyzes the results of the current run against the baseline to come up with the CI results
-# The resulting data structure is not the same as what is returned from build_test_results.
-#
-# assemblyName:
-# assemblyStartDate:
-# assemblyStartTime:
-# assemblyTime:
-# collectionName:
-# collectionTime:
-# allTests: A lookup table with an entry for each port with a different status from the baseline
-#   Key: the name of the port being tested
-#   value: An object with the following data members:
-#     name: The name of the port
-#     result: xunit test result Pass/Fail/Skip
-#     message: Human readable message describing the test result
-#     time: time the current test results took to run.
-#     baselineResult:
-#     currentResult:
-#     features:
-# ignored: list of ignored tests
+<#
+.SYNOPSIS
+Analyzes the results of the current run against the baseline.
+
+.DESCRIPTION
+combine_results compares the results to the baselie, and generates the results
+for the CI -- whether it should pass or fail.
+
+.OUTPUTS
+An object containing the following:
+(Note that this is not the same data structure as build_test_results)
+    assemblyName:
+    assemblyStartDate:
+    assemblyStartTime:
+    assemblyTime:
+    collectionName:
+    collectionTime:
+    allTests: A hashtable of each port with a different status from the baseline
+        The key is the name of the port
+        The value is an object with the following data members:
+            name: The name of the port
+            result: xunit test result Pass/Fail/Skip
+            message: Human readable message describing the test result
+            time: time the current test results took to run.
+            baselineResult:
+            currentResult:
+            features:
+    ignored: list of ignored tests
+
+.PARAMETER baseline
+The baseline object to use from build_baseline_results.
+
+.PARAMETER current
+The results object to use from build_test_results.
+#>
 function combine_results {
     [CmdletBinding()]
     Param
@@ -330,6 +399,17 @@ function combine_results {
     }
 }
 
+<#
+.SYNOPSIS
+Takes the combined results object and writes it to an xml file.
+
+.DESCRIPTION
+write_xunit_results takes the results object from combine_results, and writes the
+results XML file to the correct location for the CI system to pick it up.
+
+.PARAMETER combined_results
+The results object from combine_results.
+#>
 function write_xunit_results {
     [CmdletBinding()]
     Param(
@@ -400,6 +480,18 @@ function write_xunit_results {
     $xmlWriter.Close()
 }
 
+<#
+.SYNOPSIS
+Saves the failure logs, and prints information to the screen for CI.
+
+.DESCRIPTION
+save_failure_logs takes the combined_results object, saves the failure
+logs to the correct location for the CI to pick them up, and writes pretty
+information to the screen for the CI logs, so that one knows what's wrong.
+
+.PARAMETER combined_results
+The results object from combine_results.
+#>
 function save_failure_logs {
     [CmdletBinding()]
     Param(
@@ -484,6 +576,21 @@ function save_failure_logs {
 
 }
 
+<#
+.SYNOPSIS
+Writes a pretty summary table to the CI log.
+
+.DESCRIPTION
+Takes a hashtable which maps triplets to objects returned by the combine_results
+cmdlet, and a list of missing triplets, and prints a really pretty summary table
+to the CI logs.
+
+.PARAMETER complete_results
+A hashtable which maps triplets to combine_results objects.
+
+.PARAMETER missing_triplets
+A list of missing triplets.
+#>
 function write_summary_table {
     [CmdletBinding()]
     Param(
@@ -546,6 +653,17 @@ function write_summary_table {
     $table
 }
 
+<#
+.SYNOPSIS
+Writes short errors to the CI logs.
+
+.DESCRIPTION
+write_errors_for_summary takes a hashtable from triplets to combine_results
+objects, and writes short errors to the CI logs.
+
+.PARAMETER complete_results
+A hashtable from triplets to combine_results objects.
+#>
 function write_errors_for_summary {
     [CmdletBinding()]
     Param(

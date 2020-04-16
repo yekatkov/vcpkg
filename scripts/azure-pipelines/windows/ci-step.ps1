@@ -2,6 +2,31 @@
 # SPDX-License-Identifier: MIT
 #
 
+<#
+.SYNOPSIS
+Runs the bootstrap and port install parts of the vcpkg CI for Windows
+
+.DESCRIPTION
+There are multiple steps to the vcpkg CI; this is the most important one.
+First, it runs `boostrap-vcpkg.bat` in order to build the tool itself; it
+then installs either all of the ports specified, or all of the ports excluding
+those which are passed in $ExcludePorts. Then, it runs `vcpkg ci` to access the
+data, and prints all of the failures and successes to the Azure console.
+
+.PARAMETER Triplet
+The triplet to run the installs for -- one of the triplets known by vcpkg, like
+`x86-windows` and `x64-windows`.
+
+.PARAMETER OnlyIncludePorts
+The set of ports to install.
+
+.PARAMETER ExcludePorts
+If $OnlyIncludePorts is not passed, this set of ports is used to exclude ports to
+install from the set of all ports.
+
+.PARAMETER AdditionalVcpkgFlags
+Flags to pass to vcpkg in addition to the ports to install, and the triplet.
+#>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Triplet,
@@ -14,12 +39,27 @@ Set-StrictMode -Version Latest
 
 $scriptsDir = Split-Path -parent $script:MyInvocation.MyCommand.Definition
 
+<#
+.SYNOPSIS
+Gets the first parent directory D of $startingDir such that D/$filename is a file.
+
+.DESCRIPTION
+Get-FileRecursivelyUp Looks for a directory containing $filename, starting in
+$startingDir, and then checking each parent directory of $startingDir in turn.
+It returns the first directory it finds.
+If the file is not found, the empty string is returned - this is likely to be
+a bug.
+
+.PARAMETER startingDir
+The directory to start looking for $filename in.
+
+.PARAMETER filename
+The filename to look for.
+#>
 function Get-FileRecursivelyUp() {
     [CmdletBinding()]
     param(
-        [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory = $true)][string]$startingDir,
-        [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory = $true)][string]$filename
     )
 
@@ -30,10 +70,25 @@ function Get-FileRecursivelyUp() {
         $currentDir = Split-Path $currentDir -Parent
     }
 
+    if ($currentDir.Length -eq 0) {
+        Write-Warning "None of $startingDir's parent directories contain $filename. This is likely a bug."
+    }
+
     Write-Verbose "Examining $currentDir for $filename - Found"
     return $currentDir
 }
 
+<#
+.SYNOPSIS
+Removes a file or directory, with backoff in the directory case.
+
+.DESCRIPTION
+Remove-Item -Recurse occasionally fails spuriously; in order to get around this,
+we remove with backoff. At a maximum, we will wait 180s before giving up.
+
+.PARAMETER Path
+The path to remove.
+#>
 function Remove-VcpkgItem {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -102,7 +157,7 @@ else {
     }
 
     # Phasing out the console output (it is already saved in DevOps) Create a dummy file for now.
-    "" | Out-File -FilePath "$consoleOuputPath"
+    Set-Content -LiteralPath "$consoleOuputPath" -Value ''
 }
 
 Write-Host "CI test is complete"

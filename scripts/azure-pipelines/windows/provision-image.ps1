@@ -1,8 +1,34 @@
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: MIT
-#
-# Sets up a machine in preparation to become a build machine image, optionally switching to
-# AdminUser first.
+
+<#
+.SYNOPSIS
+Sets up a machine to be an image for a scale set.
+
+.DESCRIPTION
+provision-image.ps1 runs on an existing, freshly provisioned virtual machine,
+and sets that virtual machine up as a vcpkg build machine. After this is done,
+(outside of this script), we take that machine and make it an image to be copied
+for setting up new VMs in the scale set.
+
+This script must either be run as admin, or one must pass AdminUserPassword;
+if the script is run with AdminUserPassword, it runs itself again as an
+administrator.
+
+.PARAMETER AdminUserPassword
+The administrator user's password; if this is $null, or not passed, then the
+script assumes it's running on an administrator account.
+
+.PARAMETER StorageAccountName
+The name of the storage account. Stored in
+HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\StorageAccountName
+Used by the CI system to access the global storage.
+
+.PARAMETER StorageAccountKey
+The key of the storage account. Stored in
+HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\StorageAccountKey
+Used by the CI system to access the global storage.
+#>
 param(
   [string]$AdminUserPassword = $null,
   [string]$StorageAccountName = $null,
@@ -11,6 +37,17 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+<#
+.SYNOPSIS
+Gets a random file path in the temp directory.
+
+.DESCRIPTION
+Get-TempFilePath takes an extension, and returns a path with a random
+filename component in the temporary directory with that extension.
+
+.PARAMETER Extension
+The extension to use for the path.
+#>
 Function Get-TempFilePath {
   Param(
     [String]$Extension
@@ -62,6 +99,11 @@ if (-not [string]::IsNullOrEmpty($AdminUserPassword)) {
   exit $proc.ExitCode
 }
 
+
+# NOTE: this should probably be using BuildTools, and would need to be BuildTools if
+# we weren't a Microsoft product and therefore we don't need to worry about licensing issues.
+# IF YOU ARE SETTING UP YOUR OWN VMs, SWITCH THIS OUT
+$VisualStudioBootstrapperUrl = 'https://aka.ms/vs/16/release/vs_enterprise.exe'
 $Workloads = @(
   'Microsoft.VisualStudio.Workload.NativeDesktop',
   'Microsoft.VisualStudio.Workload.Universal',
@@ -76,7 +118,6 @@ $Workloads = @(
   'Microsoft.Component.NetFX.Native'
 )
 
-$VisualStudioBootstrapperUrl = 'https://aka.ms/vs/16/release/vs_enterprise.exe'
 $MpiUrl = 'https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe'
 
 $CudaUrl = 'https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_426.00_win10.exe'
@@ -91,6 +132,18 @@ $BinSkimUrl = 'https://www.nuget.org/api/v2/package/Microsoft.CodeAnalysis.BinSk
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
+<#
+.SYNOPSIS
+Writes a message to the screen depending on ExitCode.
+
+.DESCRIPTION
+Since msiexec can return either 0 or 3010 successfully, in both cases
+we write that installation succeeded, and which exit code it exited with.
+If msiexec returns anything else, we write an error.
+
+.PARAMETER ExitCode
+The exit code that msiexec returned.
+#>
 Function PrintMsiExitCodeMessage {
   Param(
     $ExitCode
@@ -105,6 +158,26 @@ Function PrintMsiExitCodeMessage {
   }
 }
 
+<#
+.SYNOPSIS
+Install Visual Studio.
+
+.DESCRIPTION
+InstallVisualStudio takes the $Workloads array, and installs it with the
+installer that's pointed at by $BootstrapperUrl.
+
+.PARAMETER Workloads
+The set of VS workloads to install.
+
+.PARAMETER BootstrapperUrl
+The URL of the Visual Studio installer, i.e. one of vs_*.exe.
+
+.PARAMETER InstallPath
+The path to install Visual Studio at.
+
+.PARAMETER Nickname
+The nickname to give the installation.
+#>
 Function InstallVisualStudio {
   Param(
     [String[]]$Workloads,
@@ -142,6 +215,19 @@ Function InstallVisualStudio {
   }
 }
 
+<#
+.SYNOPSIS
+Install a .msi file.
+
+.DESCRIPTION
+InstallMSI takes a url where an .msi lives, and installs that .msi to the system.
+
+.PARAMETER Name
+The name of the thing to install.
+
+.PARAMETER Url
+The URL at which the .msi lives.
+#>
 Function InstallMSI {
   Param(
     [String]$Name,
@@ -162,6 +248,23 @@ Function InstallMSI {
   }
 }
 
+<#
+.SYNOPSIS
+Unpacks a zip file to $Dir.
+
+.DESCRIPTION
+InstallZip takes a URL of a zip file, and unpacks the zip file to the directory
+$Dir.
+
+.PARAMETER Name
+The name of the tool being installed.
+
+.PARAMETER Url
+The URL of the zip file to unpack.
+
+.PARAMETER Dir
+The directory to unpack the zip file to.
+#>
 Function InstallZip {
   Param(
     [String]$Name,
@@ -181,6 +284,17 @@ Function InstallZip {
   }
 }
 
+<#
+.SYNOPSIS
+Installs MPI
+
+.DESCRIPTION
+Downloads the MPI installer located at $Url, and installs it with the
+correct flags.
+
+.PARAMETER Url
+The URL of the installer.
+#>
 Function InstallMpi {
   Param(
     [String]$Url
@@ -205,6 +319,20 @@ Function InstallMpi {
   }
 }
 
+<#
+.SYNOPSIS
+Installs NVIDIA's CUDA Toolkit.
+
+.DESCRIPTION
+InstallCuda installs the CUDA Toolkit with the features specified as a
+space separated list of strings in $Features.
+
+.PARAMETER Url
+The URL of the CUDA installer.
+
+.PARAMETER Features
+A space-separated list of features to install.
+#>
 Function InstallCuda {
   Param(
     [String]$Url,
@@ -230,6 +358,23 @@ Function InstallCuda {
   }
 }
 
+<#
+.SYNOPSIS
+Partitions a new physical disk.
+
+.DESCRIPTION
+Takes the disk $DiskNumber, turns it on, then partitions it for use with label
+$Label and drive letter $Letter.
+
+.PARAMETER DiskNumber
+The number of the disk to set up.
+
+.PARAMETER Letter
+The drive letter at which to mount the disk.
+
+.PARAMETER Label
+The label to give the disk.
+#>
 Function New-PhysicalDisk {
   Param(
     [int]$DiskNumber,

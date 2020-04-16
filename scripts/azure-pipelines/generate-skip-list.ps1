@@ -2,6 +2,20 @@
 # SPDX-License-Identifier: MIT
 #
 
+<#
+.SYNOPSIS
+Generates a list of ports to skip in the CI.
+
+.DESCRIPTION
+generate-skip-list takes a triplet, and the path to the ci.baseline.txt
+file, and generates a skip list string to pass to vcpkg.
+
+.PARAMETER Triplet
+The triplet to find skipped ports for.
+
+.PARAMETER BaselineFile
+The path to the ci.baseline.txt file.
+#>
 [CmdletBinding()]
 Param(
     [string]$Triplet,
