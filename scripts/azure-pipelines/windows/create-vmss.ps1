@@ -21,7 +21,7 @@ $CurrentProgress = 1
 
 function Find-ResourceGroupNameCollision {
   [CmdletBinding()]
-  Param([string]$Test, [string[]]$Resources)
+  Param([string]$Test, $Resources)
 
   foreach ($resource in $Resources) {
     if ($resource.ResourceGroupName -eq $Test) {
