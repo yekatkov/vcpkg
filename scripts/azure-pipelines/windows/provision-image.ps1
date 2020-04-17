@@ -97,10 +97,6 @@ if (-not [string]::IsNullOrEmpty($AdminUserPassword)) {
   exit $proc.ExitCode
 }
 
-
-# NOTE: this should probably be using BuildTools, and would need to be BuildTools if
-# we weren't a Microsoft product and therefore we don't need to worry about licensing issues.
-# IF YOU ARE SETTING UP YOUR OWN VMs, SWITCH THIS OUT
 $VisualStudioBootstrapperUrl = 'https://aka.ms/vs/16/release/vs_enterprise.exe'
 $Workloads = @(
   'Microsoft.VisualStudio.Workload.NativeDesktop',
